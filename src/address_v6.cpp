@@ -63,12 +63,12 @@ std::string Address_v6::ToString() const
     return std::string(ptr);
 }
 
-std::string Address_v6::ToString(std::error_code& ec) const
+std::string Address_v6::ToString(error::error_code& ec) const
 {
     char buf[INET6_ADDRSTRLEN];
     auto ptr = inet_ntop(AF_INET6, &addr_, buf, sizeof(buf));
     if (ptr == nullptr) {
-        error::AssignError(ec, error::ip_invalid);
+        ec.assign(error::ip_invalid);
         return std::string();
     }
 
@@ -85,12 +85,12 @@ Address_v6 Address_v6::FromString(const std::string& str)
     return addr;
 }
 
-Address_v6 Address_v6::FromString(const std::string& str, std::error_code& ec)
+Address_v6 Address_v6::FromString(const std::string& str, error::error_code& ec)
 {
     Address_v6 addr;
     auto ret = inet_pton(AF_INET6, str.c_str(), &addr.addr_);
     if (ret != 1) 
-        error::AssignError(ec, error::ip_invalid);
+        ec.assign(error::ip_invalid);
 
     return addr;
 }

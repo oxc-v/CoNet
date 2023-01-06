@@ -14,6 +14,9 @@ class Endpoint
 {
 public:
     Endpoint() noexcept;
+    Endpoint(const sockaddr_storage& addr) noexcept;
+    Endpoint(const Endpoint& ep) noexcept;
+    Endpoint& operator=(const Endpoint& ep) noexcept;
     Endpoint(int family, uint16_t port) noexcept;
     Endpoint(const Address& addr, uint16_t port) noexcept;
 
@@ -27,14 +30,25 @@ public:
      * @brief 返回一个地址
      * @return 
      */
-    Address Address() const noexcept;
+    Address Addr() const noexcept;
 
-private:
     /**
      * @brief 判断当前端点是否为IPv4
      * @return 
      */
     bool IsV4() const noexcept;
+
+    /**
+     * @brief 返回当前端点的地址族
+     * @return 
+     */
+    int Family() const noexcept;
+
+    /**
+     * @brief 返回一个字符串类型的端口
+     * @return 
+     */
+    std::string ToString() const;
 
 private:
     union {

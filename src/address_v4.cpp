@@ -41,12 +41,12 @@ std::string Address_v4::ToString() const
     return std::string(ptr);
 }
 
-std::string Address_v4::ToString(std::error_code& ec) const
+std::string Address_v4::ToString(error::error_code& ec) const
 {
     char buf[INET_ADDRSTRLEN];
     auto ptr = inet_ntop(AF_INET, &addr_, buf, sizeof(buf));
     if (ptr == nullptr) {
-        error::AssignError(ec, error::ip_invalid);
+        ec.assign(error::ip_invalid);
         return std::string();
     }
 
@@ -63,12 +63,12 @@ Address_v4 Address_v4::FromString(const std::string& str)
     return addr;
 }
 
-Address_v4 Address_v4::FromString(const std::string& str, std::error_code& ec)
+Address_v4 Address_v4::FromString(const std::string& str, error::error_code& ec)
 {
     Address_v4 addr;
     auto ret = inet_pton(AF_INET, str.c_str(), &addr.addr_);
     if (ret != 1) 
-        error::AssignError(ec, error::ip_invalid);
+        ec.assign(error::ip_invalid);
 
     return addr; 
 }

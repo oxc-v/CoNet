@@ -90,7 +90,7 @@ std::string Address::ToString() const
         return addr_v6_.ToString();
 }
 
-std::string Address::ToString(std::error_code& ec) const
+std::string Address::ToString(error::error_code& ec) const
 {
     if (type_ == IPv4)
         return addr_v4_.ToString(ec);
@@ -98,9 +98,8 @@ std::string Address::ToString(std::error_code& ec) const
         return addr_v6_.ToString(ec);
 }
 
-Address Address::FromString(const std::string& str, std::error_code& ec)
+Address Address::FromString(const std::string& str, error::error_code& ec)
 {
-    std::error_code ec;
     auto addr_v6 = Address_v6::FromString(str, ec);
     if (!ec)
         return Address(addr_v6);
@@ -114,7 +113,7 @@ Address Address::FromString(const std::string& str, std::error_code& ec)
 
 Address Address::FromString(const std::string& str)
 {
-    std::error_code ec;
+    error::error_code ec;
     auto addr = Address::FromString(str, ec);
 
     return addr;

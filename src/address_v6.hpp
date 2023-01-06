@@ -50,7 +50,7 @@ public:
      * @param ec
      * @return
      */
-    std::string ToString(std::error_code& ec) const;
+    std::string ToString(error::error_code& ec) const;
 
     /**
      * @brief 根据点分十进制形式的字符串创建Address_v4
@@ -65,7 +65,7 @@ public:
      * @param ec 
      * @return 
      */
-    static Address_v6 FromString(const std::string& str, std::error_code& ec);
+    static Address_v6 FromString(const std::string& str, error::error_code& ec);
 
     /**
      * @brief 返回一个网络字节顺序的IP地址

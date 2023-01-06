@@ -5,7 +5,6 @@
 #pragma once
 
 #include <string>
-#include <string_view>
 
 #include "address_v4.hpp"
 #include "address_v6.hpp"
@@ -65,7 +64,7 @@ public:
      * @param ec
      * @return
      */
-    std::string ToString(std::error_code& ec) const;
+    std::string ToString(error::error_code& ec) const;
 
     /**
      * @brief 根据点分十进制形式的字符串创建Address
@@ -80,7 +79,7 @@ public:
      * @param ec 
      * @return 
      */
-    static Address FromString(const std::string& str, std::error_code& ec);
+    static Address FromString(const std::string& str, error::error_code& ec);
 
 private:
     // IP地址类型
