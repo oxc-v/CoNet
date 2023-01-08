@@ -51,7 +51,6 @@ void Channel::HandleEvents(int events)
 {
     if (events & EPOLLRDHUP) {
         std::cout << "connection close event." << std::endl;
-        isClosed_ = true;
         RunCloseHandler();
     }
 
@@ -142,10 +141,11 @@ void Channel::RunErrorHandler()
 
 void Channel::Close()
 {
-    if (fd_ == -1)
+    if (isClosed_)
         return;
 
     ec_.assign(error::channel_closed);
+    isClosed_ = true;
 
     RunReadHandler();
     RunWriteHandler();
@@ -153,7 +153,6 @@ void Channel::Close()
     RunErrorHandler();
 
     close(fd_);
-    fd_ = -1;
 }
 
 } // namespace channel

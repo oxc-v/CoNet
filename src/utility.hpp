@@ -48,6 +48,14 @@ int ReadSome(int fd, std::string& buf, size_t len, error::error_code& ec);
 int Read(int fd, std::string& buf, size_t len, error::error_code& ec);
 
 /**
+ * @brief 读取系统信号
+ * @param fd 
+ * @param ec 
+ * @return -1 错误；>0 信号值
+ */
+int ReadSignal(int fd, error::error_code& ec);
+
+/**
  * @brief 尝试写入len长度的数据，不一定能写入len长度的数据
  * @param fd 
  * @param buf 

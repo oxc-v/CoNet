@@ -23,6 +23,10 @@ Acceptor::Acceptor(EventLoop& loop, const ip::Endpoint& ep)
 
     // 设置fd为非阻塞
     utility::SetNonBlocking(fd_);
+
+    channel_.SetFd(fd_);
+    channel_.SetEvents(EPOLLIN | EPOLLET);
+    loop_.AddChannel(&channel_);
 }
 
 bool Acceptor::Bind()
@@ -51,10 +55,6 @@ bool Acceptor::Listen()
 {
     if (listen(fd_, 1024) < 0)
         return false;
-
-    channel_.SetFd(fd_);
-    channel_.SetEvents(EPOLLIN | EPOLLET);
-    loop_.AddChannel(&channel_);
 
     return true;
 }

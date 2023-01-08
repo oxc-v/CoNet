@@ -1,6 +1,7 @@
 #include "utility.hpp"
 
 #include <fcntl.h>
+#include <sys/signalfd.h>
 
 namespace conet {
 namespace utility {
@@ -76,6 +77,25 @@ int Read(int fd, std::string& buf, size_t len, error::error_code& ec)
     }
 
     return readn;
+}
+
+int ReadSignal(int fd, error::error_code& ec)
+{
+try_again:
+    signalfd_siginfo signalInfo;
+    auto ret = read(fd, &signalInfo, sizeof(signalfd_siginfo));
+    if (ret == sizeof(signalfd_siginfo)) {
+        return signalInfo.ssi_signo;
+    } else {
+        if (errno == EINTR)
+            goto try_again;
+        else if (errno == EAGAIN)
+            ec.assign(error::would_block);
+        else
+            ec.assign(error::operator_error);
+    }
+
+    return -1;
 }
 
 int WriteSome(int fd, const char* buf, size_t len, error::error_code& ec)

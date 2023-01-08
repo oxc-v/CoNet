@@ -7,6 +7,7 @@
 #include "awaitable.hpp"
 #include "channel.hpp"
 #include "utility.hpp"
+#include "signal_set.hpp"
 
 #include <iostream>
 
@@ -181,6 +182,99 @@ struct WriteAwaiter
         }
 
         return writen_;
+    }
+};
+
+struct SocketAwaiter
+{
+    tcp::Socket::WaitType wt_;
+    error::error_code& ec_;
+    channel::Channel& channel_;
+
+    bool await_ready() noexcept
+    {
+        return false;
+    }
+
+    void await_suspend(awaitable::coroutine_handle handle) noexcept
+    {
+        if (wt_ == tcp::Socket::socket_closed)
+            channel_.SetCloseHandler(handle);
+        else if (wt_ == tcp::Socket::socket_error)
+            channel_.SetErrorHandler(handle);
+    }
+
+    void await_resume() const noexcept
+    {
+        // 终止事件循环、关闭套接字等操作会将错误码设置到 channel 中，
+        // 并且会立即执行读写回调，因此这里需要检查错误码。
+        auto error = channel_.ErrorCode();
+        if (error) {
+            ec_.assign(error.value());
+            return;
+        }
+
+        if (wt_ == tcp::Socket::socket_closed)
+            channel_.SetCloseHandler(nullptr);
+        else if (wt_ == tcp::Socket::socket_error)
+            channel_.SetErrorHandler(nullptr);
+    }
+};
+
+struct SignalAwaiter
+{
+    channel::Channel& channel_;
+    error::error_code& ec_;
+    signal::SignalSet& sigset_;
+
+    int signal_ = -1;
+    bool ready_ = true;
+
+    bool await_ready() noexcept
+    {
+        if (ec_)
+            return ready_;
+
+        auto ret = utility::ReadSignal(channel_.Fd(), ec_);
+        if (ret < 0) {
+            if (ec_ == error::would_block) {
+                ready_ = false;
+                ec_.clear();
+            }
+        } else {
+            if (sigset_.Contains(ret))
+                signal_ = ret;
+            else
+                ready_ = false;
+        }
+
+        return ready_;
+    }
+
+    void await_suspend(awaitable::coroutine_handle handle) noexcept
+    {
+        channel_.SetReadHandler(handle);
+    }
+
+    int await_resume() noexcept
+    {
+        channel_.SetReadHandler(nullptr);
+
+        // 终止事件循环、关闭套接字等操作会将错误码设置到 channel 中，
+        // 并且会立即执行读写回调，因此这里需要检查错误码。
+        auto error = channel_.ErrorCode();
+        if (error) {
+            ec_.assign(error.value());
+            return -1;
+        }
+
+        if (!ready_) {
+            auto ret = utility::ReadSignal(channel_.Fd(), ec_);
+            if (ret > 0)
+                signal_ = ret;
+        }
+
+        return signal_;
     }
 };
 

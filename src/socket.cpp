@@ -14,6 +14,11 @@ Socket::Socket(EventLoop& loop)
 {
 }
 
+int Socket::Fd() const noexcept
+{
+    return fd_;
+}
+
 void Socket::SetFd(int fd) noexcept
 {
     fd_ = fd;
@@ -41,8 +46,12 @@ bool Socket::IsOpen() const noexcept
 void Socket::Close() noexcept
 {
     channel_.Close();
-    
     loop_.RemoveChannel(fd_);
+}
+
+awaiter::SocketAwaiter Socket::AsyncWait(WaitType wt, error::error_code& ec) noexcept
+{
+    return awaiter::SocketAwaiter{wt, ec, channel_};
 }
 
 awaiter::ReadAwaiter Socket::AsyncReadSome(std::string& buf, size_t len, error::error_code& ec)

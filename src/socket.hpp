@@ -11,6 +11,7 @@
 namespace conet {
 
 namespace awaiter {
+    struct SocketAwaiter;
     struct ReadAwaiter;
     struct WriteAwaiter;
 }
@@ -20,6 +21,12 @@ namespace tcp {
 class Socket
 {
 public:
+    enum WaitType
+    {
+        socket_closed = 0,
+        socket_error
+    };
+
     Socket(EventLoop& loop);
 
     /**
@@ -33,6 +40,12 @@ public:
      * @return 
      */
     void Close() noexcept;
+
+    /**
+     * @brief 获取套接字
+     * @return 
+     */
+    int Fd() const noexcept;
 
     /**
      * @brief 设置套接字
@@ -51,6 +64,13 @@ public:
      * @return 
      */
     ip::Endpoint Remote() const noexcept;
+
+    /**
+     * @brief 异步等待指定事件发生
+     * @param wt
+     * @param ec
+     */
+    awaiter::SocketAwaiter AsyncWait(WaitType wt, error::error_code& ec) noexcept;
 
     /**
      * @brief 异步读取数据，读满len个字节或者遇到错误，不够len个字节返回error::would_block

@@ -1,6 +1,10 @@
 #include "event_loop.hpp"
 
 #include <unistd.h>
+#include <sys/signalfd.h>
+#include <csignal>
+
+#include "signal_set.hpp"
 
 namespace conet {
 
@@ -20,6 +24,7 @@ EventLoop::EventLoop()
 
 EventLoop::~EventLoop()
 {
+    // 关闭文件描述符
     close(epollFd_);
 }
 
@@ -31,7 +36,6 @@ void EventLoop::Run()
             perror("epoll_wait");
             continue;
         }
-
         for (int i = 0; i < nfds; ++i) {
             int fd = events_[i].data.fd;
 
@@ -42,8 +46,12 @@ void EventLoop::Run()
         }
     }
 
+    // 关闭所有channel
     for (auto [fd, channel] : channels_)
         channel->Close();
+
+    // 清空channels
+    channels_.clear();
 }
 
 void EventLoop::Stop() noexcept
