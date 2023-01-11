@@ -28,6 +28,7 @@ public:
     };
 
     Socket(EventLoop& loop);
+    ~Socket();
 
     /**
      * @brief 判断套接字是否关闭

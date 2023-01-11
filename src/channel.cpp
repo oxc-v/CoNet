@@ -1,7 +1,6 @@
 #include "channel.hpp"
 
 #include <sys/epoll.h>
-#include <unistd.h>
 #include <iostream>
 
 namespace conet {
@@ -72,7 +71,7 @@ void Channel::HandleEvents(int events)
 
 void Channel::SetReadHandler(awaitable::coroutine_handle handler) noexcept
 {
-    if (ec_ && handler) {
+    if (isClosed_ && handler) {
         handler.resume();
         return;
     }
@@ -82,7 +81,7 @@ void Channel::SetReadHandler(awaitable::coroutine_handle handler) noexcept
 
 void Channel::SetWriteHandler(awaitable::coroutine_handle handler) noexcept
 {
-    if (ec_ && handler) {
+    if (isClosed_ && handler) {
         handler.resume();
         return;
     }
@@ -92,7 +91,7 @@ void Channel::SetWriteHandler(awaitable::coroutine_handle handler) noexcept
 
 void Channel::SetCloseHandler(awaitable::coroutine_handle handler) noexcept
 {
-    if (ec_ && handler) {
+    if (isClosed_ && handler) {
         handler.resume();
         return;
     }
@@ -102,7 +101,7 @@ void Channel::SetCloseHandler(awaitable::coroutine_handle handler) noexcept
 
 void Channel::SetErrorHandler(awaitable::coroutine_handle handler) noexcept
 {
-    if (ec_ && handler) {
+    if (isClosed_ && handler) {
         handler.resume();
         return;
     }
@@ -151,8 +150,6 @@ void Channel::Close()
     RunWriteHandler();
     RunCloseHandler();
     RunErrorHandler();
-
-    close(fd_);
 }
 
 } // namespace channel

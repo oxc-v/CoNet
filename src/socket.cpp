@@ -14,6 +14,12 @@ Socket::Socket(EventLoop& loop)
 {
 }
 
+Socket::~Socket()
+{
+    if (IsOpen())
+        Close();
+}
+
 int Socket::Fd() const noexcept
 {
     return fd_;
@@ -47,6 +53,7 @@ void Socket::Close() noexcept
 {
     channel_.Close();
     loop_.RemoveChannel(fd_);
+    close(fd_);
 }
 
 awaiter::SocketAwaiter Socket::AsyncWait(WaitType wt, error::error_code& ec) noexcept

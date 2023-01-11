@@ -35,7 +35,7 @@ int Accept(int fd, tcp::Socket& sock, error::error_code& ec);
  * @param ec 
  * @return -1 错误，并置错误码；>0 读取的字节数 
  */
-int ReadSome(int fd, std::string& buf, size_t len, error::error_code& ec);
+int ReadSome(int fd, void* buf, size_t len, error::error_code& ec);
 
 /**
  * @brief 读取len长度的数据，如果内核缓冲区的数据不够，ec会被设置为error::would_block
@@ -45,15 +45,7 @@ int ReadSome(int fd, std::string& buf, size_t len, error::error_code& ec);
  * @param ec 
  * @return -1 错误；>0 读取的字节数 
  */
-int Read(int fd, std::string& buf, size_t len, error::error_code& ec);
-
-/**
- * @brief 读取系统信号
- * @param fd 
- * @param ec 
- * @return -1 错误；>0 信号值
- */
-int ReadSignal(int fd, error::error_code& ec);
+int Read(int fd, void* buf, size_t len, error::error_code& ec);
 
 /**
  * @brief 尝试写入len长度的数据，不一定能写入len长度的数据
@@ -63,7 +55,7 @@ int ReadSignal(int fd, error::error_code& ec);
  * @param ec 
  * @return -1 错误；>0 写入的字节数 
  */
-int WriteSome(int fd, const char* buf, size_t len, error::error_code& ec);
+int WriteSome(int fd, const void* buf, size_t len, error::error_code& ec);
 
 /**
  * @brief 写入数据，一次性写入所有数据，直到缓冲区满
@@ -72,7 +64,7 @@ int WriteSome(int fd, const char* buf, size_t len, error::error_code& ec);
  * @param ec 
  * @return -1 错误，0 没有数据，>0 写入的字节数 
  */
-int Write(int fd, const char* buf, size_t len, error::error_code& ec);
+int Write(int fd, const void* buf, size_t len, error::error_code& ec);
 
 } // namespace utility
 } // namespace conet

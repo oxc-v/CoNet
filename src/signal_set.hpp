@@ -63,6 +63,7 @@ public:
 private:
     EventLoop& loop_;
     channel::Channel channel_;
+    int fd_;
 
     // 信号集合
     std::unordered_set<int> signals_;  

@@ -95,7 +95,6 @@ public:
      */
     void Close();
 
-private:
     /**
      * @brief 运行读事件的协程句柄
      */

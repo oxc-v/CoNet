@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <sys/signalfd.h>
+#include <cstring>
 
 namespace conet {
 namespace utility {
@@ -37,7 +38,7 @@ int Accept(int fd, tcp::Socket& sock, error::error_code& ec)
     return ret;
 }
 
-int ReadSome(int fd, std::string& buf, size_t len, error::error_code& ec)
+int ReadSome(int fd, void* buf, size_t len, error::error_code& ec)
 {
     char tmp[MAX_BUF_SIZE];
 
@@ -53,17 +54,17 @@ try_again:
     } else if (n == 0) {
         ec.assign(error::connection_closed);
     } else {
-        buf.append(tmp, n);
+        memcpy(buf, tmp, n);
     }
 
     return n > 0 ? n : -1;
 }
 
-int Read(int fd, std::string& buf, size_t len, error::error_code& ec)
+int Read(int fd, void* buf, size_t len, error::error_code& ec)
 {
     int readn = 0;
     for (;;) {
-        int n = ReadSome(fd, buf, len - readn, ec);
+        int n = ReadSome(fd, (char*)buf + readn, len - readn, ec);
         if (n > 0) {
             readn += n;
             if (readn == len)
@@ -79,26 +80,7 @@ int Read(int fd, std::string& buf, size_t len, error::error_code& ec)
     return readn;
 }
 
-int ReadSignal(int fd, error::error_code& ec)
-{
-try_again:
-    signalfd_siginfo signalInfo;
-    auto ret = read(fd, &signalInfo, sizeof(signalfd_siginfo));
-    if (ret == sizeof(signalfd_siginfo)) {
-        return signalInfo.ssi_signo;
-    } else {
-        if (errno == EINTR)
-            goto try_again;
-        else if (errno == EAGAIN)
-            ec.assign(error::would_block);
-        else
-            ec.assign(error::operator_error);
-    }
-
-    return -1;
-}
-
-int WriteSome(int fd, const char* buf, size_t len, error::error_code& ec)
+int WriteSome(int fd, const void* buf, size_t len, error::error_code& ec)
 {
 try_again:
     int n = write(fd, buf, len);
@@ -116,11 +98,11 @@ try_again:
     return n > 0 ? n : -1;
 }
 
-int Write(int fd, const char* buf, size_t len, error::error_code& ec)
+int Write(int fd, const void* buf, size_t len, error::error_code& ec)
 {
     int writen = 0;
     for (;;) {
-        int n = WriteSome(fd, buf + writen, len - writen, ec);
+        int n = WriteSome(fd, (char*)buf + writen, len - writen, ec);
         if (n > 0) {
             writen += n;
             if (writen == len)

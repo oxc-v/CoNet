@@ -4,12 +4,13 @@
 
 #pragma once
 
+#include <sys/signalfd.h>
+#include <iostream>
+
 #include "awaitable.hpp"
 #include "channel.hpp"
 #include "utility.hpp"
 #include "signal_set.hpp"
-
-#include <iostream>
 
 namespace conet {
 namespace awaiter {
@@ -70,11 +71,13 @@ struct ReadAwaiter
     
     bool await_ready() noexcept
     {
+        char tmp[len_];
         int ret = 0;
+
         if (readAll_)
-            ret = utility::Read(channel_.Fd(), buf_, len_, ec_);
+            ret = utility::Read(channel_.Fd(), tmp, len_, ec_);
         else
-            ret = utility::ReadSome(channel_.Fd(), buf_, len_, ec_);
+            ret = utility::ReadSome(channel_.Fd(), tmp, len_, ec_);
 
         if (ret < 0) {
             if (ec_ == error::would_block) {
@@ -83,6 +86,7 @@ struct ReadAwaiter
             }
         } else {
             readn_ = ret;
+            buf_.append(tmp, ret);
         }
 
         return ready_;
@@ -107,14 +111,18 @@ struct ReadAwaiter
         }
 
         if (!ready_) {
+            char tmp[len_];
             int ret = 0;
-            if (readAll_)
-                ret = utility::Read(channel_.Fd(), buf_, len_, ec_);
-            else
-                ret = utility::ReadSome(channel_.Fd(), buf_, len_, ec_);
 
-            if (ret > 0)  
+            if (readAll_)
+                ret = utility::Read(channel_.Fd(), tmp, len_, ec_);
+            else
+                ret = utility::ReadSome(channel_.Fd(), tmp, len_, ec_);
+
+            if (ret > 0) {
                 readn_ = ret;
+                buf_.append(tmp, ret);
+            }
         }
 
         return readn_;
@@ -191,7 +199,7 @@ struct SocketAwaiter
     error::error_code& ec_;
     channel::Channel& channel_;
 
-    bool await_ready() noexcept
+    constexpr bool await_ready() noexcept
     {
         return false;
     }
@@ -235,17 +243,18 @@ struct SignalAwaiter
         if (ec_)
             return ready_;
 
-        auto ret = utility::ReadSignal(channel_.Fd(), ec_);
-        if (ret < 0) {
+        signalfd_siginfo signalInfo;
+        auto ret = utility::Read(channel_.Fd(), &signalInfo, sizeof(signalfd_siginfo), ec_);
+        if (ret == sizeof(signalfd_siginfo)) {
+            if (sigset_.Contains(signalInfo.ssi_signo))
+                signal_ = signalInfo.ssi_signo;
+            else
+                ready_ = false;
+        } else {
             if (ec_ == error::would_block) {
                 ready_ = false;
                 ec_.clear();
             }
-        } else {
-            if (sigset_.Contains(ret))
-                signal_ = ret;
-            else
-                ready_ = false;
         }
 
         return ready_;
@@ -269,12 +278,59 @@ struct SignalAwaiter
         }
 
         if (!ready_) {
-            auto ret = utility::ReadSignal(channel_.Fd(), ec_);
-            if (ret > 0)
-                signal_ = ret;
+            signalfd_siginfo signalInfo;
+            auto ret = utility::Read(channel_.Fd(), &signalInfo, sizeof(signalfd_siginfo), ec_);
+            if (ret == sizeof(signalfd_siginfo))
+                signal_ = signalInfo.ssi_signo;
         }
 
         return signal_;
+    }
+};
+
+struct BasicTimerAwaiter
+{
+    channel::Channel& channel_;
+    error::error_code& ec_;
+    bool expired_;
+
+    bool ready_ = true;
+
+    bool await_ready() noexcept
+    {
+        if (ec_ || expired_)
+            return ready_;
+
+        uint64_t exp;
+        auto ret = utility::Read(channel_.Fd(), &exp, sizeof(uint64_t), ec_);
+        if (ret != sizeof(uint64_t)) {
+            if (ec_) {
+                if (ec_ == error::would_block) {
+                    ready_ = false;
+                    ec_.clear();
+                } 
+            } else {
+                ec_.assign(error::operator_error);
+            }
+        }
+
+        return ready_;
+    }
+
+    void await_suspend(awaitable::coroutine_handle handle) noexcept
+    {
+        channel_.SetReadHandler(handle);
+    }
+
+    void await_resume() noexcept
+    {
+        channel_.SetReadHandler(nullptr);
+
+        // 终止事件循环、关闭套接字等操作会将错误码设置到 channel 中，
+        // 并且会立即执行读写回调，因此这里需要检查错误码。
+        auto error = channel_.ErrorCode();
+        if (error)
+            ec_.assign(error.value());
     }
 };
 

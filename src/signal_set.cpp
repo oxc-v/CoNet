@@ -19,6 +19,7 @@ SignalSet::SignalSet(EventLoop& loop)
         exit(1);
     }
 
+    fd_ = sfd;
     channel_.SetFd(sfd);
     channel_.SetEvents(EPOLLIN | EPOLLET);
     loop_.AddChannel(&channel_);
@@ -27,7 +28,8 @@ SignalSet::SignalSet(EventLoop& loop)
 SignalSet::~SignalSet()
 {
     channel_.Close();
-    loop_.RemoveChannel(channel_.Fd());
+    loop_.RemoveChannel(fd_);
+    close(fd_);
 }
 
 void SignalSet::Add(int signo)
@@ -63,7 +65,7 @@ awaiter::SignalAwaiter SignalSet::AsyncWait(error::error_code& ec)
 
     pthread_sigmask(SIG_BLOCK, &mask, nullptr);
 
-    auto ret = signalfd(channel_.Fd(), &mask, 0);
+    auto ret = signalfd(fd_, &mask, 0);
     if (ret == -1)
         ec.assign(error::operator_error);
 

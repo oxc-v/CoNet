@@ -18,6 +18,7 @@ enum ErrorCode
     channel_closed = 1003, // channel已关闭
     would_block = 1004, // 阻塞
     try_again = 1005, // 重试
+    operator_cancel = 1006 // 操作取消
 };
 
 class system_category : public std::error_category
@@ -43,6 +44,8 @@ public:
             return "Would block";
         case try_again:
             return "Try again";
+        case operator_cancel:
+            return "Operator cancel";
         default:
             return "Unknown error";
         }
