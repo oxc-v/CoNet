@@ -118,5 +118,12 @@ int Write(int fd, const void* buf, size_t len, error::error_code& ec)
     return writen;
 }
 
+bool SetSocketOption(int fd, int level, int optname, const void* optval, socklen_t optlen)
+{
+    auto ret = setsockopt(fd, level, optname, optval, optlen);
+
+    return ret == 0;
+}
+
 } // namespace utility
 } // namespace conet

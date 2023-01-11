@@ -66,5 +66,16 @@ int WriteSome(int fd, const void* buf, size_t len, error::error_code& ec);
  */
 int Write(int fd, const void* buf, size_t len, error::error_code& ec);
 
+/**
+ * @brief 设置socket选项
+ * @param fd 
+ * @param level 
+ * @param optname 
+ * @param optval 
+ * @param optlen 
+ * @return 
+ */
+bool SetSocketOption(int fd, int level, int optname, const void* optval, socklen_t optlen);
+
 } // namespace utility
 } // namespace conet
