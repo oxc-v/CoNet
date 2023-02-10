@@ -56,7 +56,7 @@ Endpoint::Endpoint(int family, uint16_t port) noexcept
 Endpoint::Endpoint(const conet::ip::Address& addr, uint16_t port) noexcept
     : data_()
 {
-    if (addr.IsV4() == AF_INET) {
+    if (addr.IsV4()) {
         data_.v4.family = AF_INET;
         data_.v4.sin_port = htons(port);
         data_.v4.sin_addr.s_addr = addr.v4().ToUint();

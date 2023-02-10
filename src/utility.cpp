@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <sys/signalfd.h>
 #include <cstring>
+#include <iostream>
 
 namespace conet {
 namespace utility {

@@ -1,6 +1,7 @@
 #include "channel.hpp"
 
 #include <sys/epoll.h>
+#include <unistd.h>
 #include <iostream>
 
 namespace conet {
@@ -145,6 +146,7 @@ void Channel::Close()
 
     ec_.assign(error::channel_closed);
     isClosed_ = true;
+    close(fd_);
 
     RunReadHandler();
     RunWriteHandler();

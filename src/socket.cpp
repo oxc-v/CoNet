@@ -53,7 +53,6 @@ void Socket::Close() noexcept
 {
     channel_.Close();
     loop_.RemoveChannel(fd_);
-    close(fd_);
 }
 
 awaiter::SocketAwaiter Socket::AsyncWait(WaitType wt, error::error_code& ec) noexcept

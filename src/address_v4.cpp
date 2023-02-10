@@ -55,21 +55,21 @@ std::string Address_v4::ToString(error::error_code& ec) const
 
 Address_v4 Address_v4::FromString(const std::string& str)
 {
-    Address_v4 addr;
-    auto ret = inet_pton(AF_INET, str.c_str(), &addr.addr_);
-    if (ret != 1)
-        return Address_v4();
-
-    return addr;
+    error::error_code ec;
+    return FromString(str, ec);
 }
 
 Address_v4 Address_v4::FromString(const std::string& str, error::error_code& ec)
 {
     Address_v4 addr;
-    auto ret = inet_pton(AF_INET, str.c_str(), &addr.addr_);
-    if (ret != 1) 
+    try {
+        auto ret = inet_pton(AF_INET, str.c_str(), &addr.addr_);
+        if (ret != 1) 
+            ec.assign(error::ip_invalid);
+    } catch (const std::exception& e) {
         ec.assign(error::ip_invalid);
-
+    }
+    
     return addr; 
 }
 

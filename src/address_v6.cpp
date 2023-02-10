@@ -77,20 +77,20 @@ std::string Address_v6::ToString(error::error_code& ec) const
 
 Address_v6 Address_v6::FromString(const std::string& str)
 {
-    Address_v6 addr;
-    auto ret = inet_pton(AF_INET6, str.c_str(), &addr.addr_);
-    if (ret != 1)
-        return Address_v6();
-
-    return addr;
+    error::error_code ec;
+    return FromString(str, ec);
 }
 
 Address_v6 Address_v6::FromString(const std::string& str, error::error_code& ec)
 {
     Address_v6 addr;
-    auto ret = inet_pton(AF_INET6, str.c_str(), &addr.addr_);
-    if (ret != 1) 
+    try {
+        auto ret = inet_pton(AF_INET6, str.c_str(), &addr.addr_);
+        if (ret != 1) 
+            ec.assign(error::ip_invalid);
+    } catch (const std::exception& e) {
         ec.assign(error::ip_invalid);
+    }
 
     return addr;
 }

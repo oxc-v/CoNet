@@ -104,6 +104,7 @@ Address Address::FromString(const std::string& str, error::error_code& ec)
     if (!ec)
         return Address(addr_v6);
 
+    ec.clear();
     auto addr_v4 = Address_v4::FromString(str, ec);
     if (!ec)
         return Address(addr_v4);
